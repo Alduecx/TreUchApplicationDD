@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface WorkoutRepository extends JpaRepository<Workout, Long> {
     List<Workout> findByClientId(Long clientId);
-    List<Workout> findByClientIdAndDateBetween(Long clientId, LocalDate fromDate, LocalDate toDate);
-    List<Workout> findByClientIdAndDateAfter(Long clientId, LocalDate fromDate);
-    List<Workout> findByClientIdAndDateBefore(Long clientId, LocalDate toDate);
+    List<Workout> findByClientIdAndStartDateTimeBetween(Long clientId, LocalDate fromDate, LocalDate toDate);
+    List<Workout> findByClientIdAndStartDateTimeAfter(Long clientId, LocalDate fromDate);
+    List<Workout> findByClientIdAndStartDateTimeBefore(Long clientId, LocalDate toDate);
 }

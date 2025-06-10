@@ -11,12 +11,12 @@ import ru.nsu.dd.treuch.backend.workout.services.ExerciseTemplateService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/workouts")
+@RequestMapping("/exercise-templates")
 @RequiredArgsConstructor
 public class ExerciseTemplateController {
     private final ExerciseTemplateService exerciseTemplateService;
 
-    @GetMapping("/exercise_templates")
+    @GetMapping
     public ResponseEntity<?> getExerciseTemplates(@RequestHeader("Authorization") String authToken) {
         try {
             List<ExerciseTemplateDTO> templates = exerciseTemplateService.getTemplates();
@@ -26,7 +26,7 @@ public class ExerciseTemplateController {
         }
     }
 
-    @PostMapping("/exercise_templates")
+    @PostMapping
     public ResponseEntity<ExerciseTemplateDTO> createTemplate(@RequestBody CreateExerciseTemplateDTO template) {
         try {
             var created = exerciseTemplateService.createExerciseTemplate(template);

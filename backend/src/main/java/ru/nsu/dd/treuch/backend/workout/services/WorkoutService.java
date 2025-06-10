@@ -8,15 +8,13 @@ import ru.nsu.dd.treuch.backend.workout.dto.ExerciseDTO;
 import ru.nsu.dd.treuch.backend.workout.dto.SetDTO;
 import ru.nsu.dd.treuch.backend.workout.dto.WorkoutDTO;
 import ru.nsu.dd.treuch.backend.workout.models.*;
-import ru.nsu.dd.treuch.backend.workout.repositories.ClientRepository;
-import ru.nsu.dd.treuch.backend.workout.repositories.TrainerClientRepository;
-import ru.nsu.dd.treuch.backend.workout.repositories.TrainerRepository;
-import ru.nsu.dd.treuch.backend.workout.repositories.WorkoutRepository;
+import ru.nsu.dd.treuch.backend.workout.repositories.*;
 import ru.nsu.dd.treuch.backend.security.model.User;
 import ru.nsu.dd.treuch.backend.security.repositories.UserRepository;
 
 import java.nio.file.AccessDeniedException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +27,7 @@ public class WorkoutService {
     private final ClientRepository clientRepository;
     private final TrainerRepository trainerRepository;
     private final TrainerClientRepository trainerClientRepository;
+    private final ExerciseRepository exerciseRepository;
 
 
     @Transactional
@@ -44,7 +43,10 @@ public class WorkoutService {
                 .name(workoutDTO.getName())
                 .client(client)
                 .trainer(trainer)
-                .date(LocalDate.parse(workoutDTO.getDate()))
+                .startDateTime(LocalDateTime.parse(workoutDTO.getStartDateTime()))
+                .endDateTime(LocalDateTime.parse(workoutDTO.getEndDateTime()))
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .status(WorkoutStatus.valueOf(workoutDTO.getStatus()))
                 .build();
 
@@ -76,11 +78,11 @@ public class WorkoutService {
         // Получаем тренировки с фильтрацией по дате
         List<Workout> workouts;
         if (fromDate != null && toDate != null) {
-            workouts = workoutRepository.findByClientIdAndDateBetween(clientId, fromDate, toDate);
+            workouts = workoutRepository.findByClientIdAndStartDateTimeBetween(clientId, fromDate, toDate);
         } else if (fromDate != null) {
-            workouts = workoutRepository.findByClientIdAndDateAfter(clientId, fromDate);
+            workouts = workoutRepository.findByClientIdAndStartDateTimeAfter(clientId, fromDate);
         } else if (toDate != null) {
-            workouts = workoutRepository.findByClientIdAndDateBefore(clientId, toDate);
+            workouts = workoutRepository.findByClientIdAndStartDateTimeBefore(clientId, toDate);
         } else {
             workouts = workoutRepository.findByClientId(clientId);
         }
@@ -90,6 +92,43 @@ public class WorkoutService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public WorkoutDTO updateWorkout(Long workoutId, WorkoutDTO dto, String email) {
+        Workout workout = workoutRepository.findById(workoutId).orElseThrow(() -> new EntityNotFoundException("Workout not found"));
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("User not found"));
+        Client client = clientRepository.findById(dto.getClientId()).orElseThrow(() -> new EntityNotFoundException("Client not found"));
+        Trainer trainer = trainerRepository.findById(dto.getTrainerId()).orElse(null);
+        if (!user.getId().equals(client.getUser().getId()) && trainer != null && !trainer.getId().equals(dto.getTrainerId())) {
+            throw new IllegalArgumentException("Client is not the owner of this workout");
+        }
+
+        if (dto.getName() != null) {
+            workout.setName(dto.getName());
+        }
+        if (dto.getStartDateTime() != null) {
+            workout.setStartDateTime(LocalDateTime.parse(dto.getStartDateTime()));
+        }
+        if (dto.getEndDateTime() != null) {
+            workout.setEndDateTime(LocalDateTime.parse(dto.getEndDateTime()));
+        }
+        if (dto.getStatus() != null) {
+            workout.setStatus(WorkoutStatus.valueOf(dto.getStatus()));
+        }
+        if (dto.getTrainerId() != null) {
+            workout.setTrainer(trainer);
+        }
+        if (dto.getExercises() != null) {
+            exerciseRepository.findByWorkoutId(workoutId)
+                    .stream()
+                    .forEach(exercise -> exerciseRepository.delete(exercise));
+
+            dto.getExercises().stream()
+                    .map(exDto -> createExercise(exDto, workout))
+                    .collect(Collectors.toList());
+        }
+        return WorkoutDTO.fromEntity(workout);
+    }
 
     private Exercise createExercise(ExerciseDTO exerciseDTO, Workout workout) {
         ExerciseTemplate template = exerciseTemplateService.getTemplateById(exerciseDTO.getTemplateId());

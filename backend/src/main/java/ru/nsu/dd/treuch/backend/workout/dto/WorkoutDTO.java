@@ -12,19 +12,23 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Builder
 public class WorkoutDTO {
+    private Long id;
     private String name;
     private Long trainerId;
     private Long clientId;
-    private String date;
+    private String startDateTime;
+    private String endDateTime;
     private String status;
     private List<ExerciseDTO> exercises;
 
     public static WorkoutDTO fromEntity(Workout workout) {
         return WorkoutDTO.builder()
+                .id(workout.getId())
                 .name(workout.getName())
                 .trainerId(workout.getTrainer().getId())
                 .clientId(workout.getClient().getId())
-                .date(workout.getDate().toString())
+                .startDateTime(workout.getStartDateTime().toString())
+                .endDateTime(workout.getEndDateTime().toString())
                 .status(workout.getStatus().name())
                 .exercises(workout.getExercises().stream()
                         .map(ExerciseDTO::fromEntity)

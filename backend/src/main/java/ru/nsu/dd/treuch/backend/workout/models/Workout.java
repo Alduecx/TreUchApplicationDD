@@ -32,8 +32,11 @@ public class Workout {
     @JoinColumn(name = "client_id")
     private Client client;
 
-    @Column(nullable = false)
-    private LocalDate date;
+    @Column(name = "start_date_time", nullable = false)
+    private LocalDateTime startDateTime;
+
+    @Column(name = "start_date_time", nullable = false)
+    private LocalDateTime endDateTime;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -50,4 +53,3 @@ public class Workout {
     @OneToMany(mappedBy = "workout", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Exercise> exercises;
 }
-

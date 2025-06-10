@@ -11,12 +11,12 @@ import ru.nsu.dd.treuch.backend.workout.services.MuscleGroupService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/workouts")
+@RequestMapping("/muscle-groups")
 @RequiredArgsConstructor
 public class MuscleGroupController {
     private final MuscleGroupService muscleGroupService;
 
-    @PostMapping("/muscle-groups")
+    @PostMapping("/batch")
     public ResponseEntity<?> createMuscleGroups(
             @Valid @RequestBody List<MuscleGroupDTO> groups) {
         try {
@@ -28,7 +28,7 @@ public class MuscleGroupController {
 
     }
 
-    @PostMapping("/muscle-group")
+    @PostMapping
     public ResponseEntity<MuscleGroupDTO> createMuscleGroup(
             @Valid @RequestBody MuscleGroupDTO dto) {
         MuscleGroupDTO created = muscleGroupService.createMuscleGroup(dto);
@@ -36,19 +36,16 @@ public class MuscleGroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping("/muscle-groups")
-    public ResponseEntity<List<MuscleGroupDTO>> getAllMuscleGroups() {
-        return ResponseEntity.ok(muscleGroupService.getAllMuscleGroups());
-    }
-
-    @GetMapping("/muscle-groups/{id}")
-    public ResponseEntity<MuscleGroupDTO> getMuscleGroupById(
-            @PathVariable Long id) {
+    @GetMapping
+    public ResponseEntity<?> getMuscleGroups(@PathVariable(required = false) Long muscleGroupsId) {
         try {
-            return ResponseEntity.ok(muscleGroupService.getById(id));
+            if (muscleGroupsId == null) {
+                return ResponseEntity.ok(muscleGroupService.getAllMuscleGroups());
+            }
+            return ResponseEntity.ok(muscleGroupService.getById(muscleGroupsId));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-
     }
+
 }

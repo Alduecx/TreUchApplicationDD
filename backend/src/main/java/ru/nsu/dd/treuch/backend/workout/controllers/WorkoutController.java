@@ -26,10 +26,9 @@ public class WorkoutController {
             @RequestHeader("Authorization") String authToken,
             @RequestBody WorkoutDTO workoutDTO) {
         try {
-            String token = authToken.substring(7);
-            String userEmail = jwtService.extractUsername(token);
+            String requesterEmail = getRequesterEmail(authToken);
 
-            workoutService.createWorkout(workoutDTO, userEmail);
+            workoutService.createWorkout(workoutDTO, requesterEmail);
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
@@ -38,7 +37,7 @@ public class WorkoutController {
         }
     }
 
-    @GetMapping("/clients")
+    @GetMapping
     public ResponseEntity<?> getClientWorkouts(
             @RequestHeader("Authorization") String authToken,
             @RequestParam(required = false) Long clientId,
@@ -46,8 +45,7 @@ public class WorkoutController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate
     ) {
         try {
-            String token = authToken.substring(7);
-            String requesterEmail = jwtService.extractUsername(token);
+            String requesterEmail = getRequesterEmail(authToken);
 
             List<WorkoutDTO> workouts = workoutService.getClientWorkouts(
                     requesterEmail,
@@ -63,4 +61,23 @@ public class WorkoutController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+    @PutMapping
+    public ResponseEntity<WorkoutDTO> updateWorkout(
+            @RequestHeader("Authorization") String authToken,
+            @PathVariable Long workoutId,
+            @RequestBody WorkoutDTO dto
+    ) {
+        String requesterEmail =  getRequesterEmail(authToken);
+
+        WorkoutDTO updated = workoutService.updateWorkout(workoutId, dto, requesterEmail);
+        return ResponseEntity.ok(updated);
+    }
+
+    private String getRequesterEmail(String authToken) {
+        String token = authToken.substring(7);
+        return jwtService.extractUsername(token);
+    }
+
+
 }

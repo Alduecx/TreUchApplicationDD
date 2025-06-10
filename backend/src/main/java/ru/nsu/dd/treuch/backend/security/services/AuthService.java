@@ -53,12 +53,12 @@ public class AuthService {
                 case CLIENT -> {
                     var client = new Client();
                     client.setUser(user);
-                    clientRepository.save(client);
+                    user = clientRepository.save(client).getUser();
                 }
                 case TRAINER -> {
                     var trainer = new Trainer();
                     trainer.setUser(user);
-                    trainerRepository.save(trainer);
+                    user = trainerRepository.save(trainer).getUser();
                 }
                 default -> {
                     throw new ConstraintViolationException("Unknown role", null);
